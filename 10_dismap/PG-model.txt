@@ -1,0 +1,13 @@
+model
+{
+
+  for(i in 1:N)
+  {
+     observed[i]~dpois(mu[i])
+     mu[i]<-theta[i]*expected[i]
+     theta[i]~dgamma(nu, alpha)
+  }
+
+  nu~dgamma(.01, .01)
+  alpha~dgamma(.01, .01)
+}
