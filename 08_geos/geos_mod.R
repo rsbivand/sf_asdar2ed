@@ -13,29 +13,33 @@ pal = function(n = 9) brewer.pal(n, "Reds")
 ### code chunk number 11: geos.Rnw:169-175
 ###################################################
 #trellis.par.set(canonical.theme(color = FALSE))
-library(sp)
-data(meuse)
-coordinates(meuse) <- c("x", "y")
+#library(sp)
+library(sf)
+data(meuse, package = "sp")
+# coordinates(meuse) <- c("x", "y")
+meuse = st_as_sf(meuse, coords = c("x", "y"))
 
 
 ###################################################
 ### code chunk number 13: geos.Rnw:207-220
 ###################################################
-print(xyplot(log(zinc)~sqrt(dist), as.data.frame(meuse), asp = .8), split = 
-c(1, 1,2,1), more = TRUE)
+xyplot(log(zinc)~sqrt(dist), as.data.frame(meuse), asp = .8)
 zn.lm <- lm(log(zinc)~sqrt(dist), meuse)
 meuse$fitted.s <- predict(zn.lm, meuse) - mean(predict(zn.lm, meuse))
 meuse$residuals <- residuals(zn.lm)
-print(spplot(meuse, c("fitted.s", "residuals"), col.regions = 
-  pal(), cuts = 8, colorkey=TRUE), split = c(2,1,2,1))
+plot(meuse[c("fitted.s", "residuals")], pal = pal(), pch = 16)
+#print(spplot(meuse, c("fitted.s", "residuals"), col.regions = 
+#  pal(), cuts = 8, colorkey=TRUE), split = c(2,1,2,1))
 
 
 ###################################################
 ### code chunk number 14: geos.Rnw:250-253
 ###################################################
-data(meuse.grid)
-coordinates(meuse.grid) <- c("x", "y")
-meuse.grid <- as(meuse.grid, "SpatialPixelsDataFrame")
+data(meuse.grid, package = "sp")
+library(stars)
+meuse.grid = st_as_stars(meuse.grid)
+#coordinates(meuse.grid) <- c("x", "y")
+#meuse.grid <- as(meuse.grid, "SpatialPixelsDataFrame")
 
 
 ###################################################
@@ -69,6 +73,8 @@ meuse.tr2 <- krige(log(zinc)~1, meuse, meuse.grid, degree = 2)
 ###################################################
 ### code chunk number 19: geos.Rnw:384-385 
 ###################################################
+meuse$x = st_coordinates(meuse)[,1]
+meuse$y = st_coordinates(meuse)[,2]
 lm(log(zinc)~I(x^2)+I(y^2)+I(x*y) + x + y, meuse)
 
 
@@ -87,7 +93,6 @@ hscat(log(zinc)~1,meuse,(0:9)*100, pch=3, cex=.6, col = 'grey')
 ###################################################
 ### code chunk number 24: geos.Rnw:560-585
 ###################################################
-library(gstat)
 cld <- variogram(log(zinc) ~ 1, meuse, cloud = TRUE)
 svgm <- variogram(log(zinc) ~ 1, meuse)
 d <- data.frame(gamma = c(cld$gamma, svgm$gamma),
@@ -317,7 +322,8 @@ print(plot(v.dir, v.anis, pch=3))
 ###################################################
 ### code chunk number 45: geos.Rnw:1224-1225
 ###################################################
-fit.variogram.reml(log(zinc)~1, meuse, model=vgm(0.6, "Sph", 800, 0.06))
+### THIS IS NOT SUPPORTED using sf:
+#fit.variogram.reml(log(zinc)~1, meuse, model=vgm(0.6, "Sph", 800, 0.06))
 
 
 ###################################################
@@ -392,7 +398,9 @@ names(cok.maps)
 ###################################################
 ### code chunk number 58: geos.Rnw:1644-1652
 ###################################################
-print(spplot.vcov(cok.maps, cuts=6, col.regions=pal(7)))
+
+#### THIS IS NOT SUPPORTED using stars:
+#print(spplot.vcov(cok.maps, cuts=6, col.regions=pal(7)))
 
 
 ###################################################
@@ -415,12 +423,12 @@ any(as.data.frame(x)[c(2,4,6,8)] < 0)
 ### code chunk number 62: geos.Rnw:1711-1724
 ###################################################
 g.cc <- gstat(NULL, "log.zinc", log(zinc)~1, meuse, model = v.fit)
-meuse.grid$distn <- meuse.grid$dist - mean(meuse.grid$dist) +
+meuse.grid$distn <- meuse.grid$dist - mean(meuse.grid$dist, na.rm = TRUE) +
    mean(log(meuse$zinc))
 vd.fit <- v.fit
-vov <- var(meuse.grid$distn) / var(log(meuse$zinc))
+vov <- var(as.vector(meuse.grid$distn), na.rm = TRUE) / var(log(meuse$zinc))
 vd.fit$psill <- v.fit$psill * vov
-g.cc <- gstat(g.cc, "distn", distn ~ 1, meuse.grid, nmax = 1, model=vd.fit,
+g.cc <- gstat(g.cc, "distn", distn ~ 1, st_as_sf(meuse.grid, as_points = TRUE), nmax = 1, model=vd.fit,
     merge = c("log.zinc","distn"))
 vx.fit <- v.fit
 vx.fit$psill <- sqrt(v.fit$psill * vd.fit$psill) *
@@ -434,10 +442,12 @@ x <- predict(g.cc, meuse.grid)
 ###################################################
 x$lz.uk <- lz.uk$var1.pred
 x$lz.ok <- lz.ok$var1.pred
-print(spplot(x, c("log.zinc.pred", "lz.ok", "lz.uk"),
-    names.attr = c("collocated", "ordinary", "universal"),
-    cuts=7, col.regions=pal(8)
-))
+#print(spplot(x, c("log.zinc.pred", "lz.ok", "lz.uk"),
+#    names.attr = c("collocated", "ordinary", "universal"),
+#    cuts=7, col.regions=pal(8)
+#))
+
+#... use pivot_longer, ggplot2 + geom_sf()
 
 
 ###################################################
@@ -469,19 +479,20 @@ lz.ok <- krige(log(zinc)~1, meuse, meuse.grid, v.fit, block = xy)
 ###################################################
 ### code chunk number 70: geos.Rnw:1988-1989
 ###################################################
+meuse.grid = st_as_sf(meuse.grid, as_points = TRUE)
 meuse$part.a <- gstat::idw(part.a~1, meuse.grid, meuse, nmax=1)$var1.pred
 
 
 ###################################################
 ### code chunk number 72: geos.Rnw:2011-2012
 ###################################################
-meuse$part.a <- over(meuse, meuse.grid["part.a"])[[1]]
+#meuse$part.a <- over(meuse, meuse.grid["part.a"])[[1]]
 
 
 ###################################################
 ### code chunk number 73: geos.Rnw:2020-2021
 ###################################################
-meuse$part.a <- meuse.grid$part.a[over(meuse, geometry(meuse.grid))]
+#meuse$part.a <- meuse.grid$part.a[over(meuse, geometry(meuse.grid))]
 
 
 ###################################################
@@ -493,10 +504,8 @@ nmin = 20, nmax = 40, maxdist = 1000)
 x2 <- krige(log(zinc)~1, meuse[meuse$part.a == 1,],
 meuse.grid[meuse.grid$part.a == 1,], model = vgm(.716, "Sph", 900),
 nmin = 20, nmax = 40, maxdist = 1000)
-lz.stk <- rbind(as.data.frame(x1), as.data.frame(x2))
-coordinates(lz.stk) <- c("x", "y")
-lz.stk <- as(x, "SpatialPixelsDataFrame")
-
+lz.stk <- rbind(as.data.frame(x1), as.data.frame(x2)) %>%
+	st_as_sf()
 
 ###################################################
 ### code chunk number 75: geos.Rnw:2050-2051 (eval = FALSE)
@@ -526,8 +535,9 @@ g.tr <- gstat(formula = log(zinc) ~ -1+Int+sqrt(dist), data = meuse,
    model = v.fit)
 rn <- c("Intercept", "beta1")
 df <- data.frame(Int = c(1,0), dist = c(0,1), row.names=rn)
-spdf <- SpatialPointsDataFrame(SpatialPoints(matrix(0, 2, 2)), df)
-spdf
+#spdf <- SpatialPointsDataFrame(SpatialPoints(matrix(0, 2, 2)), df)
+#spdf
+spdf = st_sf(df, st_sfc(st_point(c(0,0)), st_point(c(0,0))))
 predict(g.tr, spdf, BLUE = TRUE)
 
 
@@ -565,17 +575,19 @@ summary(ind.kr$var1.pred)
 ###################################################
 ### code chunk number 83: geos.Rnw:2287-2289
 ###################################################
-meuse.dup <- rbind(as.data.frame(meuse)[1,], as.data.frame(meuse))
-coordinates(meuse.dup)=~x+y
+meuse.dup <- rbind(as.data.frame(meuse)[1,], as.data.frame(meuse)) %>%
+	st_as_sf()
 
 
 ###################################################
 ### code chunk number 84: geos.Rnw:2291-2295
 ###################################################
-zd <- zerodist(meuse.dup)
-zd
-meuse0 <- meuse.dup[-zd[,1],]
-krige(log(zinc)~1, meuse0, meuse[1,], v.fit)
+
+### THIS WON'T WORK: there is no zerodist() in sf
+#zd <- zerodist(meuse.dup)
+#zd
+#meuse0 <- meuse.dup[-zd[,1],]
+#krige(log(zinc)~1, meuse0, meuse[1,], v.fit)
 
 
 ###################################################
@@ -603,7 +615,9 @@ krige(log(zinc)~1, meuse, meuse[1,], v.fit)
 ### code chunk number 87: geos.Rnw:2379-2381
 ###################################################
 meuse_shift = meuse
-meuse_shift@coords[1,] = meuse@coords[1,] + 1
+# shift x coordinate with one:
+meuse_shift$geometry[[1]][1] = meuse_shift$geometry[[1]][1] + 1
+
 
 
 ###################################################
@@ -688,8 +702,9 @@ cv155 <- krige.cv(log(zinc)~1, meuse, v.fit, nfold=5, verbose=FALSE)
 ###################################################
 ### code chunk number 98: geos.Rnw:2587-2595
 ###################################################
-print(bubble(cv155, "residual", main = "log(zinc): 5-fold CV residuals",
-    maxsize = 1.5, col = c("green", "red")))
+# FIXME:
+#print(bubble(cv155, "residual", main = "log(zinc): 5-fold CV residuals",
+#    maxsize = 1.5, col = c("green", "red")))
 
 
 ###################################################
@@ -738,7 +753,8 @@ lzn.sim <- krige(log(zinc)~1, meuse, meuse.grid, v.fit, nsim = 6, nmax=40)
 ###################################################
 ### code chunk number 106: geos.Rnw:2841-2850
 ###################################################
-print(spplot(lzn.sim, col.regions=pal(7), cuts=6))
+# FIXME:
+#print(spplot(lzn.sim, col.regions=pal(7), cuts=6))
 
 
 ###################################################
@@ -755,7 +771,8 @@ structure(c(181130.059662363, 180917.131281033, 180769.007189672,
 332810.293894737, 333008.922947368, 333188.634947368, 333358.888421053,
 333491.307789474, 333566.976, 333614.268631579, 333793.980631579,
 333718.312421053), .Dim = as.integer(c(18, 2)))
-area.sp = SpatialPolygons(list(Polygons(list(Polygon(area)), "area")))
+#area.sp = SpatialPolygons(list(Polygons(list(Polygon(area)), "area")))
+area.sf = st_sfc(st_polygon(list(area)))
 
 
 ###################################################
@@ -764,7 +781,7 @@ area.sp = SpatialPolygons(list(Polygons(list(Polygon(area)), "area")))
 # set eval=TRUE if change; this section is repeated in the FIG code
 nsim <- 1000
 cutoff <- 500
-sel.grid <- meuse.grid[area.sp, ]
+sel.grid <- meuse.grid[area.sf, ]
 lzn.sim <- krige(log(zinc)~1, meuse, sel.grid, v.fit, nsim = nsim, nmax=40)
 res <- apply(as.data.frame(lzn.sim)[1:nsim], 2, function(x) mean(x >            
 log(cutoff)))
@@ -779,21 +796,22 @@ log(cutoff)))
 ###################################################
 ### code chunk number 110: geos.Rnw:2922-2924
 ###################################################
-bkr <- krige(log(zinc)~1, meuse, area.sp, v.fit)
+bkr <- krige(log(zinc)~1, meuse, area.sf, v.fit)
 1 - pnorm(log(cutoff), bkr$var1.pred, sqrt(bkr$var1.var))
 
 
 ###################################################
 ### code chunk number 111: geos.Rnw:2930-2943
 ###################################################
-layout(matrix(1:2, 1, 2))
-omar <- par("mar")
-par(mar = rep(0,4))
-image(meuse.grid["part.a"], col = 'gray') #$
-lines(area, col = 'red')
-par(mar = c(2,2,0.5,0)+.1)
-hist(res, main = NULL, xlab = NULL, ylab = NULL)
-par(mar = omar)
+# FIXME:
+#layout(matrix(1:2, 1, 2))
+#omar <- par("mar")
+#par(mar = rep(0,4))
+#image(meuse.grid["part.a"], col = 'gray') #$
+#lines(area, col = 'red')
+#par(mar = c(2,2,0.5,0)+.1)
+#hist(res, main = NULL, xlab = NULL, ylab = NULL)
+#par(mar = omar)
 
 
 ###################################################
@@ -808,7 +826,8 @@ s1.sim <- krige(I(soil==1)~1, meuse, meuse.grid, s1.fit, nsim = 6,
 ###################################################
 ### code chunk number 114: geos.Rnw:3006-3014
 ###################################################
-print(spplot(s1.sim, cuts=1, col.regions=pal(3)[c(1,3)]))
+# FIXME:
+#print(spplot(s1.sim, cuts=1, col.regions=pal(3)[c(1,3)]))
 
 
 ###################################################
@@ -840,19 +859,20 @@ print(spplot(s1.sim, cuts=1, col.regions=pal(3)[c(1,3)]))
 ###################################################
 ### code chunk number 118: geos.Rnw:3111-3130
 ###################################################
-source("m1m2.R")
-layout(matrix(1:2, 1, 2))
-omar <- par("mar")
-par(mar = rep(0,4))
-image(meuse.grid, col = grey(.8))
-points(meuse)
-points(meuse[m1 < quantile(m1,.1),], pch=1, col = 'red')
-points(meuse[m1 > quantile(m1,.9),], pch=16, col = 'darkgreen')
-image(meuse.grid, col = grey(.8))
-points(meuse)
-points(meuse[m2 < quantile(m2,.1),], pch=16, col = 'darkgreen')
-points(meuse[m2 > quantile(m2,.9),], pch=1, col = 'red')
-par(mar = omar)
+# FIXME:
+#source("m1m2.R")
+#layout(matrix(1:2, 1, 2))
+#omar <- par("mar")
+#par(mar = rep(0,4))
+#image(meuse.grid, col = grey(.8))
+#points(meuse)
+#points(meuse[m1 < quantile(m1,.1),], pch=1, col = 'red')
+#points(meuse[m1 > quantile(m1,.9),], pch=16, col = 'darkgreen')
+#image(meuse.grid, col = grey(.8))
+#points(meuse)
+#points(meuse[m2 < quantile(m2,.1),], pch=16, col = 'darkgreen')
+#points(meuse[m2 > quantile(m2,.9),], pch=1, col = 'red')
+#par(mar = omar)
 
 
 ###################################################
@@ -871,8 +891,9 @@ par(mar = omar)
 ###################################################
 ### code chunk number 121: geos.Rnw:3270-3272 
 ###################################################
-library(geoR)
-plot(variog(as.geodata(meuse["zinc"]), max.dist=1500))
+# FIXME:
+#library(geoR)
+#plot(variog(as.geodata(meuse["zinc"]), max.dist=1500))
 
 
 ###################################################
@@ -881,4 +902,4 @@ plot(variog(as.geodata(meuse["zinc"]), max.dist=1500))
 ## vignette("st", package = "gstat")
 
 
-
+sessionInfo() # check: no sp?
