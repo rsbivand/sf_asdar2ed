@@ -650,7 +650,7 @@ library(stars)
 ### code chunk number 101: cm.Rnw:1986-1987
 ###################################################
 #r <- raster("70042108.tif")
-r <- read_stars("70042108.tif", proxy=TRUE)
+r <- read_stars("70042108.tif", proxy = TRUE)
 
 
 ###################################################
@@ -660,12 +660,14 @@ class(r)
 #inMemory(r)
 object.size(r)
 #cellStats(r, max)
-st_apply(r, 3, function(x) max(as.vector(x)))
-max(as.vector(r[[1]]))
+#st_apply(r, 3, function(x) max(as.vector(x)))
+max(as.vector(st_as_stars(r)[[1]]), na.rm = TRUE)
 #cellStats(r, min)
-min(as.vector(r[[1]]))
+min(as.vector(st_as_stars(r)[[1]]), na.rm = TRUE)
 #inMemory(r)
+inherits(r, "stars_proxy") # out-of-memory?
 object.size(r)
+object.size(st_as_stars(r))
 
 
 ###################################################
@@ -683,23 +685,24 @@ object.size(r)
 #cellStats(out, min)
 #cellStats(out, max)
 #inMemory(out)
-
+out = r
+out[ r <= 0 ] = NA
+max(as.vector(st_as_stars(out)[[1]]), na.rm = TRUE)
+min(as.vector(st_as_stars(out)[[1]]), na.rm = TRUE)
 
 
 ###################################################
 ### code chunk number 106: cm.Rnw:2044-2052
 ###################################################
-plot(out, col=terrain.colors(100))
-plot(auck_gshhs, add=TRUE)
+plot(out, col = terrain.colors(100), nbreaks = 101, breaks = "equal")
+plot(auck_gshhs, add = TRUE)
 
 
 ###################################################
 ### code chunk number 107: cm.Rnw:2069-2073
 ###################################################
-r1 <- as(out, "SpatialGridDataFrame")
+#r1 <- as(out, "SpatialGridDataFrame")
+r1 <- as(st_as_stars(out), "Spatial")
 summary(r1)
-r2 <- as(r1, "RasterLayer")
+r2 <- as(st_as_stars(out), "Raster")
 summary(r2)
-
-
-
