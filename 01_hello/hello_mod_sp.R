@@ -35,8 +35,8 @@ volc_proj = spTransform(volc, prj_new) # uses sf::st_transform internally
 wrld <- map("world", interior=FALSE, xlim=c(-179,179), ylim=c(-89,89),
  plot=FALSE)
 wrld_sf = st_as_sf(wrld, fill=FALSE, crs=llCRS)
-wrld_sf = st_wrap_dateline(wrld_sf)
-wrld_sp = as(wrld_sf, "Spatial")
+wrld_sf = st_wrap_dateline(wrld_sf) # avoiding maptools::pruneMap
+wrld_sp = as(wrld_sf[!st_is_empty(wrld_sf),], "Spatial")
 wrld_proj <- spTransform(wrld_sp, prj_new)
 wrld_grd <- gridlines(wrld_sp, easts=c(-179,seq(-150,150,50),179.5),
  norths=seq(-75,75,15), ndiscr=100)
@@ -68,7 +68,7 @@ box()
 image(volcano, axes=FALSE, col='white', asp=1, main="b")
 #x2 = maptools::ContourLines2SLDF(contourLines(volcano))
 x = contourLines(volcano)
-xx = lapply(x, function(x) cbind(x$x, x$y))
+xx = lapply(x, function(x) cbind(x$x, x$y)) # avoiding maptools::ContourLines2SLDF
 xxx = split(xx, sapply(x, "[[", "level"))
 x2a = st_sfc(lapply(xxx, st_multilinestring))
 x2 = st_as_sf(x2a, level=names(xxx))
