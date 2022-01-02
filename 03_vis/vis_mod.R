@@ -90,14 +90,15 @@ SpatialPolygonsRescale(layout.north.arrow(), offset = c(178750,332500),
 ###################################################
 ### code chunk number 21: vis.Rnw:537-538
 ###################################################
-library(maptools) # requires sp
+#library(maptools) # requires sp
 
 
 ###################################################
 ### code chunk number 22: vis.Rnw:543-567
 ###################################################
-nc <- readShapePoly(system.file("shapes/sids.shp", package="maptools")[1],
-  proj4string=CRS("+proj=longlat +datum=NAD27"))
+#nc <- readShapePoly(system.file("shapes/sids.shp", package="maptools")[1],
+#  proj4string=CRS("+proj=longlat +datum=NAD27"))
+nc <- as(sf::st_read(system.file("shape/nc.shp", package="sf")[1]), "Spatial")
 rrt <- nc$SID74/nc$BIR74
 brks <- quantile(rrt, seq(0,1,1/5))
 library(RColorBrewer)
@@ -111,15 +112,18 @@ degAxis(2, at=34:37)
 ###################################################
 ### code chunk number 23: vis.Rnw:598-617 (eval = FALSE)
 ###################################################
-library(maptools)
+#library(maptools)
 library(maps)
 wrld <- map("world", interior=FALSE, xlim=c(-179,179), 
    ylim=c(-89,89), plot=FALSE)
-wrld_p <- pruneMap(wrld, xlim=c(-179,179))
-llCRS <- CRS("+proj=longlat +ellps=WGS84")
-wrld_sp <- map2SpatialLines(wrld_p, proj4string=llCRS)
+#wrld_p <- pruneMap(wrld, xlim=c(-179,179))
+#llCRS <- CRS("+proj=longlat +ellps=WGS84")
+#wrld_sp <- map2SpatialLines(wrld_p, proj4string=llCRS)
+wrld_sf = st_as_sf(wrld, fill=FALSE, crs=llCRS)
+wrld_sf = st_wrap_dateline(wrld_sf) # avoiding maptools::pruneMap
+wrld_sp = as(wrld_sf[!st_is_empty(wrld_sf),], "Spatial")
 prj_new <- CRS("+proj=moll +ellps=WGS84")
-library(rgdal)
+#library(rgdal)
 wrld_proj <- spTransform(wrld_sp, prj_new)
 wrld_grd <- gridlines(wrld_sp, easts=c(-179,seq(-150,150,50), 179.5),              norths=seq(-75,75,15), ndiscr=100)
 wrld_grd_proj <- spTransform(wrld_grd, prj_new)
@@ -245,14 +249,18 @@ print(spplot(meuse, c("cadmium.st", "copper.st", "lead.st", "zinc.st"), key.spac
 ###################################################
 ### code chunk number 39: vis.Rnw:1025-1051
 ###################################################
-grys <- brewer.pal(9, "Reds")
+grys0 <- brewer.pal(9, "Reds")
 data(meuse.grid)
 coordinates(meuse.grid) <- c("x", "y")
 meuse.grid <- as(meuse.grid, "SpatialPixelsDataFrame")
-cl = ContourLines2SLDF(contourLines(as.image.SpatialGridDataFrame(
-  meuse.grid["dist"])))
-print(spplot(cl, colorkey=list(height=0.8, width=0.6), col.regions=grys), 
-  split = c(1,1,3,1), more=TRUE)
+cl0 <- contourLines(as.image.SpatialGridDataFrame(meuse.grid["dist"]))
+#cl = ContourLines2SLDF(contourLines(as.image.SpatialGridDataFrame(
+#  meuse.grid["dist"])))
+cl1 = lapply(cl0, function(x) cbind(x$x, x$y)) # avoiding maptools::ContourLines2SLDF
+cl2 = split(cl1, sapply(cl0, "[[", "level"))
+cl3 = st_sfc(lapply(cl2, st_multilinestring))
+cl = as(st_as_sf(cl3, level=names(cl2)), "Spatial")
+print(spplot(cl, colorkey=list(height=0.8, width=0.6), at=as.numeric(cl$level),  col.regions=grys0), split = c(1,1,3,1), more=TRUE)
 grys <- brewer.pal(6, "Reds")
 cuts = (0:5)/5
 print(spplot(meuse.grid, "dist", at=cuts
@@ -267,12 +275,12 @@ print(spplot(meuse.grid, "f", colorkey=list(height=0.4, width=0.6),
 ###################################################
 ### code chunk number 40: vis.Rnw:1098-1105 
 ###################################################
-library(maptools)
-data(meuse.grid)
-coordinates(meuse.grid) <- c("x", "y")
-meuse.grid <- as(meuse.grid, "SpatialPixelsDataFrame")
-im <- as.image.SpatialGridDataFrame(meuse.grid["dist"])
-cl <- ContourLines2SLDF(contourLines(im))
+#library(maptools)
+#data(meuse.grid)
+#coordinates(meuse.grid) <- c("x", "y")
+#meuse.grid <- as(meuse.grid, "SpatialPixelsDataFrame")
+#im <- as.image.SpatialGridDataFrame(meuse.grid["dist"])
+#cl <- ContourLines2SLDF(contourLines(im))
 spplot(cl)
 
 
@@ -346,11 +354,11 @@ print(p + l, split = c(2,1,2,1))
 ###################################################
 ### code chunk number 52: vis.Rnw:1471-1475
 ###################################################
-library(maptools)
-prj <- CRS("+proj=longlat +datum=NAD27")
-nc_shp <- system.file("shapes/sids.shp", package="maptools")[1]
-nc <- readShapePoly(nc_shp, proj4string=prj)
-
+#library(maptools)
+#prj <- CRS("+proj=longlat +datum=NAD27")
+#nc_shp <- system.file("shapes/sids.shp", package="maptools")[1]
+#nc <- readShapePoly(nc_shp, proj4string=prj)
+nc <- as(sf::st_read(system.file("shape/nc.shp", package="sf")[1]), "Spatial")
 
 ###################################################
 ### code chunk number 53: vis.Rnw:1477-1479 (eval = FALSE)
