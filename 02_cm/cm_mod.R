@@ -687,14 +687,16 @@ object.size(st_as_stars(r))
 #inMemory(out)
 out = r
 out[ r <= 0 ] = NA
-max(as.vector(st_as_stars(out)[[1]]), na.rm = TRUE)
-min(as.vector(st_as_stars(out)[[1]]), na.rm = TRUE)
+dout <- st_as_stars(out)
+max(as.vector(dout[[1]]), na.rm = TRUE)
+min(as.vector(dout[[1]]), na.rm = TRUE)
 
 
 ###################################################
 ### code chunk number 106: cm.Rnw:2044-2052
 ###################################################
-plot(out, col = terrain.colors(100), nbreaks = 101, breaks = "equal")
+r1 <- as(dout, "Spatial")
+image(r1, col = terrain.colors(100))
 plot(auck_gshhs, add = TRUE)
 
 
@@ -702,7 +704,6 @@ plot(auck_gshhs, add = TRUE)
 ### code chunk number 107: cm.Rnw:2069-2073
 ###################################################
 #r1 <- as(out, "SpatialGridDataFrame")
-r1 <- as(st_as_stars(out), "Spatial")
 summary(r1)
-r2 <- as(st_as_stars(out), "Raster")
+r2 <- as(dout, "SpatRaster")
 summary(r2)
