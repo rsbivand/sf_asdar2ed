@@ -1,6 +1,6 @@
 # sf_asdar2ed
 
-Conversion of ASDAR 2ed code to **sf** for vector, TBD for raster.
+Conversion of ASDAR 2ed code to avoid packages **rgdal**, **rgeos** and **maptools** to be retired during 2023; access to external libraries through **sf**.
 
 ## asdar-book
 
