@@ -6,7 +6,7 @@
 ecd.ll <- as.matrix(read.table("ECDovelatlon.dat", header = FALSE))
 library(sp)
 ecd.ll <- SpatialPoints(ecd.ll[,c(2,1)])
-proj4string(ecd.ll) <- CRS("+proj=longlat +datum=WGS84")
+proj4string(ecd.ll) <- CRS("EPSG:4326")
 
 
 ###################################################
@@ -40,9 +40,11 @@ all.equal(ecd.st2, ecd.st)
 ###################################################
 library(maps)
 m <- map("state", "florida", fill = TRUE, plot = FALSE)
-library(maptools)
-FL <- map2SpatialPolygons(m, "FL")
-proj4string(FL) <- proj4string(ecd.st)
+#library(maptools)
+#FL <- map2SpatialPolygons(m, "FL")
+library(sf)
+FL <- as(st_as_sf(m), "Spatial")
+slot(FL, "proj4string") <- slot(slot(ecd.st, "sp"), "proj4string")
 
 
 ###################################################
@@ -147,9 +149,10 @@ stplot(ecd.FL[o,], mode = "xt", col.regions = pal, cuts = 6, asp = .5,
 ###################################################
 library(maps)
 states.m = map("state", plot=FALSE, fill=TRUE)
-IDs <- sapply(strsplit(states.m$names, ":"), function(x) x[1])
-library(maptools)
-states = map2SpatialPolygons(states.m, IDs=IDs)
+#IDs <- sapply(strsplit(states.m$names, ":"), function(x) x[1])
+#library(maptools)
+#states = map2SpatialPolygons(states.m, IDs=IDs)
+states <- as(as(st_as_sf(states.m), "Spatial"), "SpatialPolygons")
 yrs = 1970:1986
 time = as.POSIXct(paste(yrs, "-01-01", sep=""), tz = "GMT")
 library(plm)
