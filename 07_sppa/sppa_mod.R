@@ -16,35 +16,40 @@ summary(japanesepines)
 ###################################################
 ### code chunk number 8: sppa.Rnw:258-259
 ###################################################
-library(maptools)
+#library(maptools) move coercion to sp
 
 
 ###################################################
 ### code chunk number 9: sppa.Rnw:261-263
 ###################################################
-spjpines <- as(japanesepines, "SpatialPoints")
+#spjpines <- as(japanesepines, "SpatialPoints")
+library(sf)
+oo <- st_as_sf(japanesepines)
+spjpines <- as(oo[oo$label=="point",], "Spatial")
 summary(spjpines)
 
 
 ###################################################
 ### code chunk number 10: sppa.Rnw:275-277
 ###################################################
-spjpines1 <- elide(spjpines, scale=TRUE, unitsq=TRUE)
-summary(spjpines1)
+#spjpines1 <- elide(spjpines, scale=TRUE, unitsq=TRUE) #move elide() methods to sp
+#summary(spjpines1)
 
 
 ###################################################
 ### code chunk number 11: sppa.Rnw:294-296
 ###################################################
-pppjap <- as(spjpines1, "ppp")
-summary(pppjap)
+#pppjap <- as(spjpines1, "ppp")
+#summary(pppjap)
 
 
 ###################################################
 ### code chunk number 12: sppa.Rnw:300-311
 ###################################################
 data(redwoodfull)
-spred <- as(redwoodfull, "SpatialPoints")
+#spred <- as(redwoodfull, "SpatialPoints")
+oo <- st_as_sf(redwoodfull)
+spred <- as(as(oo[oo$label=="point",], "Spatial"), "SpatialPoints")
 data(cells)
 spcells <- as(cells, "SpatialPoints")
 dpp<-data.frame(rbind(coordinates(spjpines1), coordinates(spred), 
