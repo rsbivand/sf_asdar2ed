@@ -3,13 +3,18 @@
 ###################################################
 ### code chunk number 8: lat.Rnw:179-187
 ###################################################
-library(rgdal)
-NY8 <- readOGR("NY8_utm18.shp", "NY8_utm18")
-TCE <- readOGR("TCE.shp", "TCE")
+#library(rgdal)
+library(sp)
+library(sf)
+#NY8 <- readOGR("NY8_utm18.shp", "NY8_utm18")
+NY8 <- as(st_read("NY8_utm18.shp"), "Spatial")
+row.names(NY8) <- as.character(as.integer(row.names(NY8))-1L)
+#TCE <- readOGR("TCE.shp", "TCE")
+TCE <- as(st_read("TCE.shp"), "Spatial")
 library(spdep)
 NY_nb <- read.gal("NY_nb.gal", region.id=row.names(NY8))
-cities <- readOGR("NY8cities.shp", "NY8cities")
-
+#cities <- readOGR("NY8cities.shp", "NY8cities")
+cities <- as(st_read("NY8cities.shp"), "Spatial")
 
 ###################################################
 ### code chunk number 9: lat.Rnw:193-210
@@ -163,7 +168,7 @@ set.seed(987654)
 n <- length(Sy0_nb)
 uncorr_x <- rnorm(n)
 rho <- 0.5
-autocorr_x <- invIrW(Sy0_lw_W, rho) %*% uncorr_x
+autocorr_x <- spatialreg::invIrW(Sy0_lw_W, rho) %*% uncorr_x
 
 
 ###################################################
@@ -436,6 +441,7 @@ lm.morantest(nylm, NYlistw)
 ### code chunk number 65: lat.Rnw:2155-2158
 ###################################################
 NYlistwW <- nb2listw(NY_nb, style = "W")
+library(spatialreg)
 aple(residuals(nylm), listw=NYlistwW)
 spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, listw=NYlistwW)$lambda
 
@@ -451,7 +457,7 @@ summary(nysar)
 ### code chunk number 67: lat.Rnw:2281-2283
 ###################################################
 nylam1 <- c(nysar$lambda)
-nylam2 <- c(LR1.spautolm(nysar)$p.value)
+nylam2 <- c(LR1.Spautolm(nysar)$p.value)
 
 
 ###################################################
@@ -496,7 +502,7 @@ lm.morantest(nylmw, NYlistw)
 ###################################################
 ### code chunk number 72: lat.Rnw:2423-2425
 ###################################################
-nysarw <- spatialreg::spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, listw=NYlistw, weights=POP8)
+nysarw <- spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, listw=NYlistw, weights=POP8)
 summary(nysarw)
 
 
@@ -528,7 +534,7 @@ nylam1 <- c(nycar$lambda)
 ###################################################
 ### code chunk number 76: lat.Rnw:2548-2551
 ###################################################
-nycarw <- spatialreg::spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, family="CAR",
+nycarw <- spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, family="CAR",
    listw=NYlistw, weights=POP8)
 summary(nycarw)
 
@@ -536,7 +542,7 @@ summary(nycarw)
 ###################################################
 ### code chunk number 77: lat.Rnw:2624-2626
 ###################################################
-nysarwM<-spatialreg::spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, family="SAR",
+nysarwM<-spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, family="SAR",
    listw=NYlistw, weights=POP8, method="Matrix")
 
 
@@ -552,7 +558,7 @@ summary(nysarwM)
 1/range(eigenw(NYlistw))
 nysar_ll<-spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, family="SAR",
    listw=NYlistw, llprof=100)
-nysarw_ll<-spatialreg::spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, family="SAR",
+nysarw_ll<-spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, family="SAR",
    listw=NYlistw, weights=POP8, llprof=100)
 
 
@@ -572,7 +578,7 @@ legend("bottom", legend=c("weighted SAR", "SAR"), lty=c(1,2), lwd=2, bty="n")
 ###################################################
 ### code chunk number 81: lat.Rnw:2711-2714
 ###################################################
-nysmaw<-spatialreg::spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, family="SMA",
+nysmaw<-spautolm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, family="SMA",
    listw=NYlistw, weights=POP8)
 summary(nysmaw)
 
@@ -607,7 +613,7 @@ printCoefmat(tres)
 ###################################################
 nylag <- lagsarlm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, listw=NYlistwW)
 summary(nylag)
-bptest.sarlm(nylag)
+bptest.Sarlm(nylag)
 
 
 ###################################################
@@ -629,7 +635,7 @@ c(McRes$beta, rho=McRes$rho, sig2=McRes$sig2)
 nymix <- lagsarlm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, listw=NYlistwW, type="mixed")
 nymix
 #anova(nymix, nylag)
-LR.sarlm(nymix, nylag)
+LR.Sarlm(nymix, nylag)
 
 
 ###################################################
@@ -657,7 +663,7 @@ HPDinterval(imps, choice="total")
 ###################################################
 nyerr <- errorsarlm(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, data=NY8, listw=NYlistwW)
 summary(nyerr)
-LR.sarlm(nyerr, nymix)
+LR.Sarlm(nyerr, nymix)
 
 
 ###################################################

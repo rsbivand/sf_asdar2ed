@@ -5,27 +5,34 @@
 ###################################################
 ### code chunk number 131: die.Rnw:2144-2145
 ###################################################
-library(rgdal)
-sohoSG <- readGDAL("sohoSG.tif")
+#library(rgdal)
+library(sp)
+library(sf)
+library(stars)
+#sohoSG <- readGDAL("sohoSG.tif")
+sohoSG_stars <- read_stars("sohoSG.tif")
+sohoSG <- cbind(as(sohoSG_stars[,,,1, drop=TRUE], "Spatial"), as(sohoSG_stars[,,,2, drop=TRUE], "Spatial"))
 names(sohoSG) <- c("snowcost_broad", "snowcost_not_broad")
 
 
 ###################################################
 ### code chunk number 133: die.Rnw:2149-2151
 ###################################################
-buildings <- readOGR("buildings.shp", "buildings", integer64="allow.loss")
-proj4string(sohoSG) <- CRS(proj4string(buildings))
+#buildings <- readOGR("buildings.shp", "buildings", integer64="allow.loss")
+buildings <- as(st_read("buildings.shp"), "Spatial")
+slot(sohoSG, "proj4string") <- slot(buildings, "proj4string")
 
 
 ###################################################
 ### code chunk number 134: die.Rnw:2168-2173
 ###################################################
-deaths <- readOGR("deaths.shp", "deaths", integer64="allow.loss")
+#deaths <- readOGR("deaths.shp", "deaths", integer64="allow.loss")
+deaths <- as(st_read("deaths.shp"), "Spatial")
 names(deaths) <- c("cat", "long", "lat", "Num_Cases", "snowcost_broad",
  "snowcost_not_broad", "b_nearer")
 o <- over(deaths, sohoSG)
-library(maptools)
-deaths <- spCbind(deaths, o)
+#library(maptools)
+deaths <- cbind(deaths, o)
 deaths$b_nearer <- deaths$snowcost_broad < deaths$snowcost_not_broad
 
 
@@ -50,9 +57,10 @@ par(oopar)
 ###################################################
 ### code chunk number 137: die.Rnw:2203-2205
 ###################################################
-nb_pump <- readOGR("nb_pump.shp", "nb_pump")
-b_pump <- readOGR("b_pump.shp", "b_pump")
-
+#nb_pump <- readOGR("nb_pump.shp", "nb_pump")
+nb_pump <- as(st_read("nb_pump.shp"), "Spatial")
+#b_pump <- readOGR("b_pump.shp", "b_pump")
+b_pump <- as(st_read("b_pump.shp"), "Spatial")
 
 ###################################################
 ### code chunk number 138: die.Rnw:2229-2277

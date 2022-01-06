@@ -4,14 +4,19 @@
 ###################################################
 ### code chunk number 7: dismap.Rnw:183-191
 ###################################################
-library(maptools)
+#library(maptools)
+library(sp)
+library(sf)
 library(spdep)
 nc_file <- system.file("shapes/sids.shp", package="spData")[1]
-llCRS <- CRS("+proj=longlat +datum=NAD27")
-nc <- readShapePoly(nc_file, ID="FIPSNO", proj4string=llCRS)
-rn <- sapply(slot(nc, "polygons"), function(x) slot(x, "ID"))
+nc <- as(st_read(nc_file), "Spatial")
+row.names(nc) <- as.character(nc$FIPSNO)
+#llCRS <- CRS("+proj=longlat +datum=NAD27")
+#nc <- readShapePoly(nc_file, ID="FIPSNO", proj4string=llCRS)
+slot(nc, "proj4string") <- as(st_crs("EPSG:4267"), "CRS")
+#rn <- sapply(slot(nc, "polygons"), function(x) slot(x, "ID"))
 gal_file <- system.file("weights/ncCR85.gal", package="spData")[1]
-ncCR85 <- read.gal(gal_file, region.id = rn)
+ncCR85 <- read.gal(gal_file, region.id = row.names(nc))
 
 
 ###################################################
@@ -453,15 +458,15 @@ tango.test(Observed~offset(log(Expected)), as(nc, "data.frame"), "negbin", 999,
 ###################################################
 sidsgam <- opgam(data=as(nc, "data.frame"),  radius=30, step=10, alpha=.002)
 gampoints <- SpatialPoints(sidsgam[,c("x", "y")]*1000, 
-   CRS("+proj=utm +zone=18 +datum=NAD27"))
+   as(st_crs("EPSG:4267"), "CRS"))
 
 
 ###################################################
 ### code chunk number 85: dismap.Rnw:2539-2543
 ###################################################
-library(rgdal)
-ll <- CRS("+proj=longlat +datum=NAD27")
-gampoints <- spTransform(gampoints, ll)
+#library(rgdal)
+#ll <- as(st_crs("EPSG:4267"), "CRS")
+#gampoints <- spTransform(gampoints, ll)
 gam.layout <- list("sp.points", gampoints)
 
 

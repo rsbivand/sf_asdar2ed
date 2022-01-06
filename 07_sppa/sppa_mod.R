@@ -23,10 +23,14 @@ summary(japanesepines)
 ### code chunk number 9: sppa.Rnw:261-263
 ###################################################
 #spjpines <- as(japanesepines, "SpatialPoints")
+#https://github.com/r-spatial/sf/issues/1873
 library(sf)
-oo <- st_as_sf(japanesepines)
-spjpines <- as(oo[oo$label=="point",], "Spatial")
+oo <- st_as_sf(rescale(japanesepines))
+library(sp)
+spjpines <- as(as(oo[oo$label=="point",], "Spatial"), "SpatialPoints")
 summary(spjpines)
+oo <- st_as_sf(japanesepines)
+spjpines1 <- as(as(oo[oo$label=="point",], "Spatial"), "SpatialPoints")
 
 
 ###################################################
@@ -50,8 +54,12 @@ data(redwoodfull)
 #spred <- as(redwoodfull, "SpatialPoints")
 oo <- st_as_sf(redwoodfull)
 spred <- as(as(oo[oo$label=="point",], "Spatial"), "SpatialPoints")
+summary(spred)
 data(cells)
-spcells <- as(cells, "SpatialPoints")
+summary(cells)
+oo <- st_as_sf(cells)
+spcells <- as(as(oo[oo$label=="point",], "Spatial"), "SpatialPoints")
+summary(spcells)
 dpp<-data.frame(rbind(coordinates(spjpines1), coordinates(spred), 
    coordinates(spcells)))
 njap<-nrow(coordinates(spjpines1))
@@ -71,11 +79,15 @@ print(xyplot(y~x|DATASET, data=dpp, pch=19, aspect=1))
 ###################################################
 ### code chunk number 15: sppa.Rnw:401-406
 ###################################################
-library(rgdal)
-spasthma <- readOGR("spasthma.shp", "spasthma", stringsAsFactors=TRUE)
-spbdry <- readOGR("spbdry.shp", "spbdry")
-spsrc <- readOGR("spsrc.shp", "spsrc")
-sproads <- readOGR("sproads.shp", "sproads")
+#library(rgdal)
+#spasthma <- readOGR("spasthma.shp", "spasthma", stringsAsFactors=TRUE)
+#spbdry <- readOGR("spbdry.shp", "spbdry")
+#spsrc <- readOGR("spsrc.shp", "spsrc")
+#sproads <- readOGR("sproads.shp", "sproads")
+spasthma <- as(st_read("spasthma.shp", stringsAsFactors=TRUE), "Spatial")
+spbdry <- as(st_read("spbdry.shp"), "Spatial")
+spsrc <- as(st_read("spsrc.shp"), "Spatial")
+sproads <- as(st_read("sproads.shp"), "Spatial")
 
 
 ###################################################
@@ -97,9 +109,12 @@ set.seed(120109)
 # spatstat 1.45-0 enforce a tighter spacing of the r vector 2016-03-22
 # r <- seq(0, sqrt(2)/6, by = 0.005)
 r <- seq(0, sqrt(2)/6, by = 0.001)
-envjap <- envelope(as(spjpines1, "ppp"), fun=Gest, r=r, nrank=2, nsim=99)
-envred <- envelope(as(spred, "ppp"), fun=Gest, r=r, nrank=2, nsim=99)
-envcells <- envelope(as(spcells, "ppp"), fun=Gest, r=r, nrank=2, nsim=99)
+#envjap <- envelope(as(spjpines1, "ppp"), fun=Gest, r=r, nrank=2, nsim=99)
+#envred <- envelope(as(spred, "ppp"), fun=Gest, r=r, nrank=2, nsim=99)
+#envcells <- envelope(as(spcells, "ppp"), fun=Gest, r=r, nrank=2, nsim=99)
+envjap <- envelope(as.ppp(st_as_sf(spjpines1)), fun=Gest, r=r, nrank=2, nsim=99)
+envred <- envelope(as.ppp(st_as_sf(spred)), fun=Gest, r=r, nrank=2, nsim=99)
+envcells <- envelope(as.ppp(st_as_sf(spcells)), fun=Gest, r=r, nrank=2, nsim=99)
 Gresults <- rbind(envjap, envred, envcells) 
 Gresults <- cbind(Gresults, 
    y=rep(c("JAPANESE", "REDWOOD", "CELLS"), each=length(r)))
@@ -123,9 +138,9 @@ llines(x, y, col="black", lwd=2)
 ### code chunk number 24: sppa.Rnw:661-670 (eval = FALSE)
 ###################################################
 set.seed(30)
-Fenvjap<-envelope(as(spjpines1, "ppp"), fun=Fest, r=r, nrank=2, nsim=99)
-Fenvred<-envelope(as(spred, "ppp"), fun=Fest, r=r, nrank=2, nsim=99)
-Fenvcells<-envelope(as(spcells, "ppp"), fun=Fest, r=r, nrank=2, nsim=99)
+Fenvjap<-envelope(as.ppp(st_as_sf(spjpines1)), fun=Fest, r=r, nrank=2, nsim=99)
+Fenvred<-envelope(as.ppp(st_as_sf(spred)), fun=Fest, r=r, nrank=2, nsim=99)
+Fenvcells<-envelope(as.ppp(st_as_sf(spcells)), fun=Fest, r=r, nrank=2, nsim=99)
 Fresults<-rbind(Fenvjap, Fenvred, Fenvcells)
 Fresults<-cbind(Fresults, 
    y=rep(c("JAPANESE", "REDWOOD", "CELLS"), each=length(r)))
@@ -183,7 +198,7 @@ bwq<-mserwq$h[which.min(mserwq$mse)]
 bwq
 
 #Spatstat code
-mserw<-bw.diggle(as(spred, "ppp"))
+mserw<-bw.diggle(as.ppp(st_as_sf((spred))))
 bw<-as.numeric(mserw)
 bw
 
@@ -203,7 +218,7 @@ points(attr(mserw, "h")[attr(mserw, "iopt")], bw)
 ###################################################
 library(splancs)
 poly <- as.points(list(x = c(0, 0, 1, 1), y = c(0, 1, 1, 0)))
-sG <- Sobj_SpatialGrid(spred, maxDim=100)$SG
+sG <- maptools::Sobj_SpatialGrid(spred, maxDim=100)$SG # FIXME
 grd <- slot(sG, "grid")
 summary(grd)
 k0 <- spkernel2d(spred, poly, h0=bw, grd)
@@ -310,9 +325,9 @@ ppm(Q=lmaple, trend=~x+y+I(x^2)+I(y^2)+I(x*y))
 ### code chunk number 43: sppa.Rnw:1420-1430
 ###################################################
 set.seed(30)
-Kenvjap<-envelope(as(spjpines1, "ppp"), fun=Kest, r=r, nrank=2, nsim=99)
-Kenvred<-envelope(as(spred, "ppp"), fun=Kest, r=r, nrank=2, nsim=99)
-Kenvcells<-envelope(as(spcells, "ppp"), fun=Kest, r=r, nrank=2, nsim=99)
+Kenvjap<-envelope(as.ppp(st_as_sf(spjpines1)), fun=Kest, r=r, nrank=2, nsim=99)
+Kenvred<-envelope(as.ppp(st_as_sf(spred)), fun=Kest, r=r, nrank=2, nsim=99)
+Kenvcells<-envelope(as.ppp(st_as_sf(spcells)), fun=Kest, r=r, nrank=2, nsim=99)
 Kresults<-rbind(Kenvjap, Kenvred, Kenvcells)
 Kresults<-cbind(Kresults, 
    y=rep(c("JAPANESE", "REDWOOD", "CELLS"), each=length(r)))
@@ -338,8 +353,8 @@ print(xyplot((obs-theo)~r|y , data=Kresults, type="l",
 ###################################################
 bwasthma<-.06
 
-pppasthma<-as(spasthma, "ppp")
-pppasthma$window<-as(spbdry, "owin")
+pppasthma<-as.ppp(st_as_sf(spasthma))
+pppasthma$window<-as.owin(st_as_sf(spbdry))
 
 marks(pppasthma)<-relevel(pppasthma$marks$Asthma, "control")
 
@@ -367,9 +382,11 @@ kcontrols<-density(controls, bwasthma)
 ### code chunk number 54: sppa.Rnw:1880-1888
 ###################################################
 
-spkratio0<-as(kcases, "SpatialGridDataFrame")
+#spkratio0<-as(kcases, "SpatialGridDataFrame")
+spkratio0<-image2Grid(list(x=kcases$xcol, y=kcases$yrow, z=t(kcases$v)))
 names(spkratio0)<-"kcases"
-spkratio0$kcontrols<-as(kcontrols, "SpatialGridDataFrame")$v
+#spkratio0$kcontrols<-as(kcontrols, "SpatialGridDataFrame")$v
+spkratio0$kcontrols<-image2Grid(list(x=kcontrols$xcol, y=kcontrols$yrow, z=t(kcontrols$v)))$z
 spkratio<-as(spkratio0, "SpatialPixelsDataFrame")
 
 spkratio$kratio <- spkratio$kcases/spkratio$kcontrols
@@ -398,7 +415,8 @@ controlsrel <- unmark(subset(pppasthma0, marks(pppasthma0) =="control"))
 kcasesrel <- density(casesrel, bwasthma)
 kcontrolsrel <- density(controlsrel, bwasthma)
 kratiorel <- eval.im(kcasesrel/kcontrolsrel)
-rlabelratio[i,] <- as(as(kratiorel, "SpatialGridDataFrame"), "SpatialPixelsDataFrame")$v
+#rlabelratio[i,] <- as(as(kratiorel, "SpatialGridDataFrame"), "SpatialPixelsDataFrame")$v
+rlabelratio[i,] <- as(image2Grid(list(x=kratiorel$xcol, y=kratiorel$yrow, z=t(kratiorel$v))), "SpatialPixelsDataFrame")$z
 pvaluemap <- pvaluemap + (spkratio$kratio < rlabelratio[i,])
 }
 
@@ -420,7 +438,11 @@ pvaluerho <- (sum(ratio > ratiorho)+1)/(niter+1)
 spkratio$pvaluemap <- (pvaluemap+1)/(niter+1)
 imgpvalue <- as.image.SpatialGridDataFrame(spkratio["pvaluemap"])
 clpvalue <- contourLines(imgpvalue, levels=c(0,.05, .95, 1))
-cl <- ContourLines2SLDF(clpvalue)
+#cl <- ContourLines2SLDF(clpvalue)
+xx = lapply(clpvalue, function(x) cbind(x$x, x$y)) # avoiding maptools::ContourLines2SLDF
+xxx = split(xx, sapply(clpvalue, "[[", "level"))
+x2a = st_sfc(lapply(xxx, st_multilinestring))
+cl = as(st_as_sf(x2a, level=names(xxx)), "Spatial")
 
 
 ###################################################
@@ -466,8 +488,8 @@ bwasthmap <- 0.06
 ### code chunk number 71: sppa.Rnw:2293-2295
 ###################################################
 rr<-relrisk(pppasthma, bwasthmap)
-spkratio$prob<-as(as(rr, "SpatialGridDataFrame"), "SpatialPixelsDataFrame")$v
-
+#spkratio$prob<-as(as(rr, "SpatialGridDataFrame"), "SpatialPixelsDataFrame")$v
+spkratio$prob<-as(image2Grid(list(x=rr$xcol, y=rr$yrow, z=t(rr$v))), "SpatialPixelsDataFrame")$z
 
 ###################################################
 ### code chunk number 72: sppa.Rnw:2307-2317

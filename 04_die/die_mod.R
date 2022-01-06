@@ -528,7 +528,7 @@ grd.union.ll <- spTransform(grd.union, ll)
 ###################################################
 ### code chunk number 112: die.Rnw:1703-1707
 ###################################################
-llGRD <- maptools:GE_SpatialGrid(grd.union.ll) # move from maptools to sp
+llGRD <- maptools::GE_SpatialGrid(grd.union.ll) # move from maptools to sp
 llGRD_in <- over(llGRD$SG, grd.union.ll)
 llSGDF <- SpatialGridDataFrame(grid=slot(llGRD$SG, "grid"), proj4string=CRS(proj4string(llGRD$SG)), data=data.frame(in0=llGRD_in))
 llSPix <- as(llSGDF, "SpatialPixelsDataFrame")
