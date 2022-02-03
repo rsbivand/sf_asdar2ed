@@ -24,6 +24,7 @@ GCRSt <- dbGetQuery(db, "SELECT auth_name, code, name FROM geodetic_crs WHERE ty
 PCRSi <- dbGetQuery(db, "SELECT auth_name, code, name FROM projected_crs WHERE typeof(code) = 'integer'")
 PCRSi$code <- as.character(PCRSi$code)
 PCRSt <- dbGetQuery(db, "SELECT auth_name, code, name FROM projected_crs WHERE typeof(code) = 'text'")
+dbDisconnect(db)
 GPCRS <- rbind(GCRSi, GCRSt, PCRSi, PCRSt)
 GPCRS[grep("^ED50$", GPCRS$name),]
 
@@ -31,6 +32,7 @@ GPCRS[grep("^ED50$", GPCRS$name),]
 ### code chunk number 15: die.Rnw:306-307
 ###################################################
 #CRS("+init=epsg:4230")
+library(sp)
 CRS("EPSG:4230")
 
 ###################################################
@@ -46,7 +48,7 @@ ED50
 IJ.east <- as(char2dms("4d31\'00\"E"), "numeric")
 IJ.north <- as(char2dms("52d28\'00\"N"), "numeric")
 IJ.ED50 <- SpatialPoints(cbind(x=IJ.east, y=IJ.north), proj4string=ED50)
-res <- spTransform(IJ.ED50, CRS("EPSG:4326"))
+res <- as(st_transform(st_as_sf(IJ.ED50), st_crs(CRS("EPSG:4326"))), "Spatial")
 x <- as(dd2dms(coordinates(res)[1]), "character")
 y <- as(dd2dms(coordinates(res)[2], TRUE), "character")
 cat(x, y, "\n")
@@ -59,7 +61,7 @@ gzAzimuth(coordinates(IJ.ED50), coordinates(res))
 ### code chunk number 19: die.Rnw:430-434
 ###################################################
 proj4string(IJ.ED50) <- CRS("EPSG:4230")
-res <- spTransform(IJ.ED50, CRS("EPSG:4326"))
+res <- as(st_transform(st_as_sf(IJ.ED50), st_crs(CRS("EPSG:4326"))), "Spatial")
 spDistsN1(coordinates(IJ.ED50), coordinates(res), longlat=TRUE)*1000
 gzAzimuth(coordinates(IJ.ED50), coordinates(res))
 
@@ -171,7 +173,7 @@ scot_LLa$smth <- empbaysmooth(O, E)$smthrr
 ###################################################
 ### code chunk number 42: die.Rnw:863-864
 ###################################################
-scot_BNG <- spTransform(scot_LLa, CRS("EPSG:27700"))
+scot_BNG <- as(st_transform(st_as_sf(scot_LLa), st_crs(CRS("EPSG:27700"))), "Spatial")
 
 
 ###################################################
@@ -520,36 +522,47 @@ st_write(st_as_sf(Fires[,c("gml_id", "FireDate", "Area_HA")]), dsn="fires.kml", 
 grd <- as(meuse.grid, "SpatialPolygons")
 proj4string(grd) <- CRS(proj4string(meuse))
 #grd.union <- unionSpatialPolygons(grd, rep("x", length(slot(grd, "polygons"))))
-grd.union <- as(st_union(st_as_sf(grd)), "Spatial")
+grd.union <- st_union(st_as_sf(grd))
 ll <- CRS("EPSG:4326")
-grd.union.ll <- spTransform(grd.union, ll)
+grd.union.ll <- st_transform(grd.union, st_crs(ll))
 
 
 ###################################################
 ### code chunk number 112: die.Rnw:1703-1707
 ###################################################
-llGRD <- maptools::GE_SpatialGrid(grd.union.ll) # move from maptools to sp
-llGRD_in <- over(llGRD$SG, grd.union.ll)
-llSGDF <- SpatialGridDataFrame(grid=slot(llGRD$SG, "grid"), proj4string=CRS(proj4string(llGRD$SG)), data=data.frame(in0=llGRD_in))
+#llGRD <- maptools::GE_SpatialGrid(grd.union.ll) # move from maptools to sp
+library(stars)
+llGRD <- st_as_stars(st_bbox(grd.union.ll), n=600*600)
+#llGRD_in <- over(llGRD$SG, grd.union.ll)
+#llGRD_in <- over(llGRD, grd.union.ll)
+#llSGDF <- SpatialGridDataFrame(grid=slot(llGRD$SG, "grid"), proj4string=CRS(proj4string(llGRD$SG)), data=data.frame(in0=llGRD_in))
+#llSGDF <- SpatialGridDataFrame(grid=slot(llGRD, "grid"), proj4string=slot(llGRD, "proj4string"), data=data.frame(in0=llGRD_in))
+llSGDF <- as(st_crop(llGRD, grd.union.ll), "Spatial")
 llSPix <- as(llSGDF, "SpatialPixelsDataFrame")
 
 
 ###################################################
 ### code chunk number 113: die.Rnw:1722-1724
 ###################################################
-meuse_ll <- spTransform(meuse, CRS("EPSG:4326"))
+meuse_ll <- as(st_transform(st_as_sf(meuse), st_crs(CRS("EPSG:4326"))), "Spatial")
 llSPix$pred <- gstat::idw(log(zinc)~1, meuse_ll, llSPix)$var1.pred
 
 
 ###################################################
 ### code chunk number 114: die.Rnw:1744-1749
 ###################################################
-png(file="zinc_IDW.png", width=llGRD$width, height=llGRD$height, bg="transparent")
-par(mar=c(0,0,0,0), xaxs="i", yaxs="i")
+#png(file="zinc_IDW.png", width=llGRD$width, height=llGRD$height, bg="transparent")
+#par(mar=c(0,0,0,0), xaxs="i", yaxs="i")
 image(llSPix, "pred", col=bpy.colors(20))
-dev.off()
-maptools::kmlOverlay(llGRD, "zinc_IDW.kml", "zinc_IDW.png") # move from maptools to sp
+#dev.off()
+#maptools::kmlOverlay(llGRD, "zinc_IDW.kml", "zinc_IDW.png") # move from maptools to sp
 
 ###################################################
 source("die_snow.R", echo=TRUE)
+
+(sI <- sessionInfo()) # check: no sp?
+
+"rgdal" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"rgeos" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"maptools" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
 

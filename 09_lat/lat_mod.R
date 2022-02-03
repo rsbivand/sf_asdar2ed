@@ -314,7 +314,7 @@ cor8 <- sp.correlogram(neighbours=NY_nb, var=NY8$Cases, order=8, method="I", sty
 ###################################################
 ### code chunk number 52: lat.Rnw:1579-1581
 ###################################################
-library(pgirmess)
+library(pgirmess) #need >= 2.0.0
 corD <- correlog(coordinates(NY8), NY8$Cases, method="Moran")
 
 
@@ -619,14 +619,14 @@ bptest.Sarlm(nylag)
 ###################################################
 ### code chunk number 86: lat.Rnw:2942-2943
 ###################################################
-library(McSpatial)
+#library(McSpatial) archived
 
 
 ###################################################
 ### code chunk number 87: lat.Rnw:2945-2947
 ###################################################
-McRes <- sarml(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, wmat=listw2mat(NYlistwW), eigvar=eigenw(NYlistwW), print=FALSE, data=NY8)
-c(McRes$beta, rho=McRes$rho, sig2=McRes$sig2)
+#McRes <- sarml(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, wmat=listw2mat(NYlistwW), eigvar=eigenw(NYlistwW), print=FALSE, data=NY8)
+#c(McRes$beta, rho=McRes$rho, sig2=McRes$sig2)
 
 
 ###################################################
@@ -717,7 +717,7 @@ summary(nyGMerr)
 ###################################################
 ### code chunk number 98: lat.Rnw:3287-3288
 ###################################################
-fit <- qregspiv(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, wmat=listw2mat(NYlistwW), data=NY8, tau=.5, nboot=200)
+#fit <- qregspiv(Z~PEXPOSURE+PCTAGE65P+PCTOWNHOME, wmat=listw2mat(NYlistwW), data=NY8, tau=.5, nboot=200)
 
 
 ###################################################
@@ -776,4 +776,9 @@ anova(nyGLMp, nyGAMp, test="Chisq")
 ###################################################
 nylam1 <- c(summary(nyGAMp)$edf)
 
+(sI <- sessionInfo()) # check: no sp?
+
+"rgdal" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"rgeos" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"maptools" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
 

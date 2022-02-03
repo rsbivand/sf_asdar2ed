@@ -512,6 +512,8 @@ sapply(slot(slot(manitoulin_sp, "polygons")[[1]], "Polygons"), function(x)
 ### code chunk number 83: cm.Rnw:1646-1648
 ###################################################
 #manitoulin_sp <- createSPComment(manitoulin_sp)
+comment(slot(manitoulin_sp, "polygons")[[1]]) <- rep("0", 19)
+comment(manitoulin_sp) <- "TRUE"
 manitoulin_sf <- st_make_valid(st_geometry(st_as_sf(manitoulin_sp)))
 manitoulin_sp <- as(manitoulin_sf, "Spatial")
 sapply(slot(manitoulin_sp, "polygons"), comment)
@@ -707,3 +709,11 @@ plot(auck_gshhs, add = TRUE)
 summary(r1)
 r2 <- as(dout, "SpatRaster")
 summary(r2)
+
+(sI <- sessionInfo()) # check: no sp?
+
+"rgdal" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"rgeos" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"maptools" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+
+

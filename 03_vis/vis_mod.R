@@ -119,16 +119,17 @@ wrld <- map("world", interior=FALSE, xlim=c(-179,179),
 #wrld_p <- pruneMap(wrld, xlim=c(-179,179))
 #llCRS <- CRS("+proj=longlat +ellps=WGS84")
 #wrld_sp <- map2SpatialLines(wrld_p, proj4string=llCRS)
+library(sf)
 wrld_sf = st_as_sf(wrld, fill=FALSE, crs=llCRS)
 wrld_sf = st_wrap_dateline(wrld_sf) # avoiding maptools::pruneMap
 wrld_sp = as(wrld_sf[!st_is_empty(wrld_sf),], "Spatial")
 prj_new <- CRS("+proj=moll +ellps=WGS84")
 #library(rgdal)
-wrld_proj <- spTransform(wrld_sp, prj_new)
+wrld_proj <- as(st_transform(st_as_sf(wrld_sp), st_crs(prj_new)), "Spatial") #spTransform(wrld_sp, prj_new)
 wrld_grd <- gridlines(wrld_sp, easts=c(-179,seq(-150,150,50), 179.5),              norths=seq(-75,75,15), ndiscr=100)
-wrld_grd_proj <- spTransform(wrld_grd, prj_new)
+wrld_grd_proj <- as(st_transform(st_as_sf(wrld_grd), st_crs(prj_new)), "Spatial") #spTransform(wrld_grd, prj_new)
 at_sp <- gridat(wrld_sp, easts=0, norths=seq(-75,75,15), offset=0.3)
-at_proj <- spTransform(at_sp, prj_new)
+at_proj <- as(st_transform(st_as_sf(at_sp), st_crs(prj_new)), "Spatial") #spTransform(at_sp, prj_new)
 plot(wrld_proj, col="grey60")
 plot(wrld_grd_proj, add=TRUE, lty=3, col="grey70")
 text(coordinates(at_proj), pos=at_proj$pos, offset=at_proj$offset,                 labels=parse(text=as.character(at_proj$labels)), cex=0.6)
@@ -480,4 +481,11 @@ legend("topleft", fill=attr(q5Colours, "palette"),
 cuts = (0:10)/10
 spplot(meuse.grid, "dist", colorkey=list(labels=list(at=cuts)), at=cuts)
 
+
+
+(sI <- sessionInfo()) # check: no sp?
+
+"rgdal" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"rgeos" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"maptools" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
 

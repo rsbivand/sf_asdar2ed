@@ -54,7 +54,7 @@ olinda_sf <- st_read("olinda1.shp")
 st_precision(olinda_sf)
 olinda <- as(olinda_sf, "Spatial")
 proj4string(olinda) <- CRS("EPSG:4674")
-olinda_utm <- spTransform(olinda, CRS("EPSG:31985"))
+olinda_utm <- as(st_transform(st_as_sf(olinda), st_crs(CRS("EPSG:31985"))), "Spatial")
 olinda_utm_sf <- st_as_sf(olinda_utm)
 st_precision(olinda_utm_sf)
 st_precision(olinda_utm_sf) <- 1e8
@@ -560,10 +560,16 @@ all.equal(unname(whichPoly), unlist(whichPoly1a))
 ### code chunk number 74: cm2.Rnw:1542-1547
 ###################################################
 hels <- matrix(c(24.97, 60.17), nrow=1)
-p4s <- CRS("EPSG:4326")
+p4s <- as(st_crs("EPSG:4326"), "CRS")
 Hels <- SpatialPoints(hels, proj4string=p4s)
 d041224 <- as.POSIXct("2004-12-24", tz="EET")
-sunriset(Hels, d041224, direction="sunrise", POSIXct.out=TRUE) # move from maptools to sp
+#maptools::sunriset(Hels, d041224, direction="sunrise", POSIXct.out=TRUE) # move from maptools to sp
+solartime::computeSunriseHour(d041224, latDeg=hels[1,2], longDeg=hels[1,1])
 
 
+(sI <- sessionInfo()) # check: no sp?
+
+"rgdal" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"rgeos" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"maptools" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
 

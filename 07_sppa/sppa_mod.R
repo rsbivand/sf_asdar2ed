@@ -198,7 +198,8 @@ bwq<-mserwq$h[which.min(mserwq$mse)]
 bwq
 
 #Spatstat code
-mserw<-bw.diggle(as.ppp(st_as_sf((spred))))
+spred_ppp <- as.ppp(st_as_sf(spred))
+mserw<-bw.diggle(spred_ppp)
 bw<-as.numeric(mserw)
 bw
 
@@ -218,7 +219,9 @@ points(attr(mserw, "h")[attr(mserw, "iopt")], bw)
 ###################################################
 library(splancs)
 poly <- as.points(list(x = c(0, 0, 1, 1), y = c(0, 1, 1, 0)))
-sG <- maptools::Sobj_SpatialGrid(spred, maxDim=100)$SG # FIXME
+library(stars)
+#sG <- maptools::Sobj_SpatialGrid(spred, maxDim=100)$SG # FIXME
+sG <- as(as(st_as_stars(st_bbox(st_as_sfc(spred)), n=100*100), "Spatial"), "SpatialGrid")
 grd <- slot(sG, "grid")
 summary(grd)
 k0 <- spkernel2d(spred, poly, h0=bw, grd)
@@ -235,13 +238,13 @@ summary(kernels)
 ###################################################
 cc <- coordinates(kernels)
 xy<-list(x=cc[,1], y=cc[,2])
-k4<-density(as(spred, "ppp"), .5*bw, dimyx=c(100, 100), xy=xy)
+k4<-density(spred_ppp, .5*bw, dimyx=c(100, 100), xy=xy)
 kernels$k4<-as(k4, "SpatialGridDataFrame")$v
-k5<-density(as(spred, "ppp"), .5*.05, dimyx=c(100, 100), xy=xy)
+k5<-density(spred_ppp, .5*.05, dimyx=c(100, 100), xy=xy)
 kernels$k5<-as(k5, "SpatialGridDataFrame")$v
-k6<-density(as(spred, "ppp"), .5*.1, dimyx=c(100, 100), xy=xy)
+k6<-density(spred_ppp, .5*.1, dimyx=c(100, 100), xy=xy)
 kernels$k6<-as(k6, "SpatialGridDataFrame")$v
-k7<-density(as(spred, "ppp"), .5*.15, dimyx=c(100, 100), xy=xy)
+k7<-density(spred_ppp, .5*.15, dimyx=c(100, 100), xy=xy)
 kernels$k7<-as(k7, "SpatialGridDataFrame")$v
 summary(kernels)
 
@@ -353,10 +356,10 @@ print(xyplot((obs-theo)~r|y , data=Kresults, type="l",
 ###################################################
 bwasthma<-.06
 
-pppasthma<-as.ppp(st_as_sf(spasthma))
+pppasthma<-as.ppp(st_as_sf(spasthma["Asthma"]))
 pppasthma$window<-as.owin(st_as_sf(spbdry))
 
-marks(pppasthma)<-relevel(pppasthma$marks$Asthma, "control")
+marks(pppasthma)<-relevel(pppasthma$marks, "control")
 
 
 
@@ -754,4 +757,9 @@ kih<-Kinhom(cases, lambda1, r=r)
 ## lines(r, envKIcov$lo-envKIcov$mmean, lty=2)
 ## lines(r, envKIcov$hi-envKIcov$mmean, lty=2)
 
+(sI <- sessionInfo()) # check: no sp?
+
+"rgdal" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"rgeos" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"maptools" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
 

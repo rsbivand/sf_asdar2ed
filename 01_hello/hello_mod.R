@@ -20,7 +20,6 @@ library(maps)
 #library(maptools)
 #library(rgdal)
 library(sf)
-sessionInfo()
 
 
 ###################################################
@@ -28,21 +27,25 @@ sessionInfo()
 ###################################################
 volc.tab = read.table("data1964al.xy")
 volc = SpatialPoints(volc.tab[c(2,1)])
-llCRS <- CRS("+proj=longlat +ellps=WGS84")
+llCRS <- as(st_crs("+proj=longlat +ellps=WGS84"), "CRS")
 slot(volc, "proj4string") <- llCRS
-prj_new = CRS("+proj=moll +ellps=WGS84")
-volc_proj = spTransform(volc, prj_new) # uses sf::st_transform internally
+prj_new = as(st_crs("+proj=moll +ellps=WGS84"), "CRS")
+volc_proj <- as(st_transform(st_as_sf(volc), st_crs(prj_new)), "Spatial")
+#volc_proj = spTransform(volc, prj_new) # uses sf::st_transform internally
 wrld <- map("world", interior=FALSE, xlim=c(-179,179), ylim=c(-89,89),
  plot=FALSE)
 wrld_sf = st_as_sf(wrld, fill=FALSE, crs=llCRS)
 wrld_sf = st_wrap_dateline(wrld_sf) # avoiding maptools::pruneMap
 wrld_sp = as(wrld_sf[!st_is_empty(wrld_sf),], "Spatial")
-wrld_proj <- spTransform(wrld_sp, prj_new)
+#wrld_proj <- spTransform(wrld_sp, prj_new)
+wrld_proj <- as(st_transform(st_as_sf(wrld_sp), st_crs(prj_new)), "Spatial")
 wrld_grd <- gridlines(wrld_sp, easts=c(-179,seq(-150,150,50),179.5),
  norths=seq(-75,75,15), ndiscr=100)
-wrld_grd_proj <- spTransform(wrld_grd, prj_new)
+#wrld_grd_proj <- spTransform(wrld_grd, prj_new)
+wrld_grd_proj <- as(st_transform(st_as_sf(wrld_grd), st_crs(prj_new)), "Spatial")
 at_sp <- gridat(wrld_sp, easts=0, norths=seq(-75,75,15), offset=0.3)
-at_proj <- spTransform(at_sp, prj_new)
+#at_proj <- spTransform(at_sp, prj_new)
+at_proj <- as(st_transform(st_as_sf(at_sp), st_crs(prj_new)), "Spatial")
 opar = par(no.readonly = TRUE)
 par(mar=c(1,1,1,1)+0.1, xpd=NA)
 plot(wrld_proj, col="grey50")
@@ -130,4 +133,9 @@ par(opar)
 
 #par(opar)
 
+(sI <- sessionInfo()) # check: no sp?
+
+"rgdal" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"rgeos" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"maptools" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
 

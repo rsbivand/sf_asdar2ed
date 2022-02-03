@@ -591,4 +591,9 @@ ats <- quantile(nmf$SPBAYESX, seq(0, 1, 1/9))
 print(spplot(nmf, c("SPBAYESX"), at=ats, col.regions=cols(length(ats)-1), 
    col="grey", sp.layout=spl, main="Spatial effects"))
 
+(sI <- sessionInfo()) # check: no sp?
+
+"rgdal" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"rgeos" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"maptools" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
 

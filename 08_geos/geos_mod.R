@@ -902,4 +902,9 @@ s1.sim <- krige(I(soil==1)~1, meuse, meuse.grid, s1.fit, nsim = 6,
 ## vignette("st", package = "gstat")
 
 
-sessionInfo() # check: no sp?
+(sI <- sessionInfo()) # check: no sp?
+
+"rgdal" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"rgeos" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+"maptools" %in% c(names(sI$otherPkgs), names(sI$loadedOnly))
+
