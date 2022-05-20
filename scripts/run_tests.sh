@@ -46,7 +46,7 @@ _EOCONF
         echo "ASDAR $chst evolution_test failure"
     fi
     echo $LANG >> ${chst}.log
-    diff ${chst}.log ${chch}.log.save > ${chst}.diffs
+    diff ${chst}.log ${chst}.log.save > ${chst}.diffs
     if test -s ${chst}.diffs
     then
       cat ${chst}.diffs > ${MESSAGES}/${ch}_diff_2ed_failure
