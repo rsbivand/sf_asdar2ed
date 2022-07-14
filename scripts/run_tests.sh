@@ -5,8 +5,7 @@ export ASDAR="https://github.com/rsbivand/sf_asdar2ed/raw/"
 #http://www.asdar-book.org/"
 #export ASDAR_DOWNLOAD="${ASDAR}datasets"
 export ASDAR_BUNDLES="${ASDAR}/main"
-export R_LIBS="/home/rsb/lib/r_libs"
-export R_CMD="/home/rsb/topics/R/R412-share/bin/R"
+export R_CMD="/home/rsb/topics/R/R421-share/bin/R"
 export RUN_IN="/home/rsb/proj/other/book/evolution_tests"
 export MESSAGES="/home/rsb/proj/other/book/evolution_tests/messages"
 export LANG=C
@@ -37,7 +36,11 @@ for ch in $CHAPTERS; do
     echo "Sys.setenv(LC_COLLATE = \"C\", LANGUAGE = \"en\")" > scrpt
     echo "options(\"sp_evolution_status\"=${st}L)" >> scrpt
     echo "source(\"${ch}_mod.R\", echo=TRUE)" >> scrpt
-    $R_CMD --vanilla < scrpt 2>&1 > ${chst}.log
+    if test ${st} == "2"
+      then R_LIBS="/home/rsb/lib/r_libs" $R_CMD --vanilla < scrpt 2>&1 > ${chst}.log
+    else
+      R_LIBS="/home/rsb/lib/r_libs:/home/rsb/lib/r_libs_retiring" $R_CMD --vanilla < scrpt 2>&1 > ${chst}.log
+    fi
     if test $? -ne 0
       then 
         cat >  ${MESSAGES}/${chst} << _EOCONF
