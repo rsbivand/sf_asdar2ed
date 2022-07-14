@@ -53,9 +53,9 @@ x <- as(dd2dms(coordinates(res)[1]), "character")
 y <- as(dd2dms(coordinates(res)[2], TRUE), "character")
 cat(x, y, "\n")
 spDistsN1(coordinates(IJ.ED50), coordinates(res), longlat=TRUE)*1000
-library(maptools)
-gzAzimuth(coordinates(IJ.ED50), coordinates(res))
-
+library(geosphere)
+#gzAzimuth(coordinates(IJ.ED50), coordinates(res))
+bearing(coordinates(IJ.ED50), coordinates(res), a=6370997, f=0)
 
 ###################################################
 ### code chunk number 19: die.Rnw:430-434
@@ -63,8 +63,8 @@ gzAzimuth(coordinates(IJ.ED50), coordinates(res))
 proj4string(IJ.ED50) <- CRS("EPSG:4230")
 res <- as(st_transform(st_as_sf(IJ.ED50), st_crs(CRS("EPSG:4326"))), "Spatial")
 spDistsN1(coordinates(IJ.ED50), coordinates(res), longlat=TRUE)*1000
-gzAzimuth(coordinates(IJ.ED50), coordinates(res))
-
+#gzAzimuth(coordinates(IJ.ED50), coordinates(res))
+bearing(coordinates(IJ.ED50), coordinates(res), a=6370997, f=0)
 
 ###################################################
 ### code chunk number 21: die.Rnw:449-450
