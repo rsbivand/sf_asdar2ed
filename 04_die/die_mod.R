@@ -53,9 +53,12 @@ x <- as(dd2dms(coordinates(res)[1]), "character")
 y <- as(dd2dms(coordinates(res)[2], TRUE), "character")
 cat(x, y, "\n")
 spDistsN1(coordinates(IJ.ED50), coordinates(res), longlat=TRUE)*1000
-library(geosphere)
+#library(geosphere)
 #gzAzimuth(coordinates(IJ.ED50), coordinates(res))
-bearing(coordinates(IJ.ED50), coordinates(res), a=6370997, f=0)
+#bearing(coordinates(IJ.ED50), coordinates(res), a=6370997, f=0)
+p = st_sfc(st_point(coordinates(IJ.ED50)), st_point(coordinates(res)), crs = 4326)
+library(lwgeom)
+st_geod_azimuth(p) |> units::set_units("degree")
 
 ###################################################
 ### code chunk number 19: die.Rnw:430-434
@@ -64,7 +67,9 @@ proj4string(IJ.ED50) <- CRS("EPSG:4230")
 res <- as(st_transform(st_as_sf(IJ.ED50), st_crs(CRS("EPSG:4326"))), "Spatial")
 spDistsN1(coordinates(IJ.ED50), coordinates(res), longlat=TRUE)*1000
 #gzAzimuth(coordinates(IJ.ED50), coordinates(res))
-bearing(coordinates(IJ.ED50), coordinates(res), a=6370997, f=0)
+#bearing(coordinates(IJ.ED50), coordinates(res), a=6370997, f=0)
+p = st_sfc(st_point(coordinates(IJ.ED50)), st_point(coordinates(res)), crs = 4326)
+st_geod_azimuth(p) |> units::set_units("degree")
 
 ###################################################
 ### code chunk number 21: die.Rnw:449-450
