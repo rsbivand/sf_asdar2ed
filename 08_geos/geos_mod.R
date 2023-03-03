@@ -322,8 +322,7 @@ print(plot(v.dir, v.anis, pch=3))
 ###################################################
 ### code chunk number 45: geos.Rnw:1224-1225
 ###################################################
-### THIS IS NOT SUPPORTED using sf:
-#fit.variogram.reml(log(zinc)~1, meuse, model=vgm(0.6, "Sph", 800, 0.06))
+fit.variogram.reml(log(zinc)~1, data=as(meuse, "Spatial"), model=vgm(0.6, "Sph", 800, 0.06))
 
 
 ###################################################
