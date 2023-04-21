@@ -105,7 +105,6 @@ getClass("CRS")
 ### code chunk number 25: cm.Rnw:528-533
 ###################################################
 m <- matrix(c(0,0,1,1), ncol=2, dimnames=list(NULL, c("min", "max")))
-#crs <- CRS(projargs=as.character(NA))
 library(sf)
 crs <- as(st_crs(as.character(NA)), "CRS")
 crs
@@ -167,7 +166,6 @@ brazil
 coordinates(CRAN_sp)[brazil,]
 
 
-
 ###################################################
 ### code chunk number 37: cm.Rnw:757-758
 ###################################################
@@ -190,8 +188,7 @@ str(row.names(CRAN_df))
 ###################################################
 ### code chunk number 40: cm.Rnw:849-853
 ###################################################
-CRAN_spdf1 <- SpatialPointsDataFrame(CRAN_mat, CRAN_df, proj4string=llCRS,
-    match.ID=TRUE)
+CRAN_spdf1 <- SpatialPointsDataFrame(CRAN_mat, CRAN_df, proj4string=llCRS, match.ID=TRUE)
 CRAN_spdf1[4,]
 str(CRAN_spdf1$loc)
 str(CRAN_spdf1[["loc"]])
@@ -201,8 +198,7 @@ str(CRAN_spdf1[["loc"]])
 ### code chunk number 41: cm.Rnw:863-867
 ###################################################
 s <- sample(nrow(CRAN_df))
-CRAN_spdf2 <- SpatialPointsDataFrame(CRAN_mat, CRAN_df[s,], proj4string=llCRS,
-    match.ID=TRUE)
+CRAN_spdf2 <- SpatialPointsDataFrame(CRAN_mat, CRAN_df[s,], proj4string=llCRS, match.ID=TRUE)
 all.equal(CRAN_spdf2, CRAN_spdf1)
 CRAN_spdf2[4,]
 
@@ -217,8 +213,7 @@ row.names(CRAN_df1) <- sample(c(outer(letters, letters, paste, sep="")), nrow(CR
 ###################################################
 ### code chunk number 44: cm.Rnw:883-885
 ###################################################
-try(CRAN_spdf3 <- SpatialPointsDataFrame(CRAN_mat, CRAN_df1, proj4string=llCRS,
-    match.ID=TRUE))
+try(CRAN_spdf3 <- SpatialPointsDataFrame(CRAN_mat, CRAN_df1, proj4string=llCRS, match.ID=TRUE))
 
 
 ###################################################
@@ -271,29 +266,26 @@ summary(turtle_df)
 ###################################################
 ### code chunk number 54: cm.Rnw:1021-1027
 ###################################################
-timestamp <- as.POSIXlt(strptime(as.character(turtle_df$obs_date), "%m/%d/%Y %H:%M:%S"),
-    "GMT")
+timestamp <- as.POSIXlt(strptime(as.character(turtle_df$obs_date), "%m/%d/%Y %H:%M:%S"), "GMT")
 turtle_df1 <- data.frame(turtle_df, timestamp=timestamp)
 turtle_df1$lon <- ifelse(turtle_df1$lon < 0, turtle_df1$lon+360, turtle_df1$lon)
 turtle_sp <- turtle_df1[order(turtle_df1$timestamp),]
 coordinates(turtle_sp) <- c("lon", "lat")
 proj4string(turtle_sp) <- as(st_crs("+proj=longlat +ellps=WGS84"), "CRS")
 
+
 ###################################################
 ### code chunk number 55: cm.Rnw:1031-1034
 ###################################################
-#library(maptools)
-#gshhs.c.b <- system.file("share/gshhs_c.b", package="maptools")
-#pac <- Rgshhs(gshhs.c.b, level=1, xlim=c(130,250), ylim=c(15,60), verbose=FALSE)
 library(maps)
 pac <- map("world", fill=TRUE, plot=FALSE, wrap=c(0,360))
 pac <- as(st_as_sf(pac), "Spatial")
+
 
 ###################################################
 ### code chunk number 56: cm.Rnw:1039-1051
 ###################################################
 plot(pac, axes=TRUE, xlim=c(130,250), ylim=c(15,60), col="khaki2", xaxs="i", yaxs="i")
-#plot(pac$SP, axes=TRUE, col="khaki2", xaxs="i", yaxs="i")
 plot(turtle_sp, add=TRUE)
 m_rle <- rle(months(turtle_sp$timestamp))
 clen <- cumsum(m_rle$lengths[-length(m_rle$lengths)])-1
@@ -320,8 +312,6 @@ getClass("SpatialLines")
 library(maps)
 japan <- map("world", "japan", fill=FALSE, plot=FALSE)
 p4s <- st_crs("+proj=longlat +ellps=WGS84")
-#library(maptools)
-#SLjapan <- map2SpatialLines(japan, proj4string=p4s)
 SLjapan <- as(st_geometry(st_as_sf(japan, fill=FALSE, crs=p4s)), "Spatial")
 str(SLjapan, max.level=2)
 
@@ -350,11 +340,7 @@ t(slot(volcano_sl, "data"))
 ###################################################
 ### code chunk number 63: cm.Rnw:1217-1220
 ###################################################
-#llCRS <- CRS("+proj=longlat +ellps=WGS84")
 # MapGen format defunct https://www.ngdc.noaa.gov/mgg/shorelines/shorelines.html
-#auck_shore <- MapGen2SL("auckland_mapgen.dat", llCRS)
-#summary(auck_shore)
-#st_write(st_as_sf(auck_shore), "auck_shore.gpkg")
 auck_shore <- as(st_geometry(st_read("auck_shore.gpkg")), "Spatial")
 
 
@@ -436,10 +422,6 @@ order(sapply(slot(islands_sp, "polygons"),
 ###################################################
 library(maps)
 state.map <- map("state", plot=FALSE, fill=TRUE)
-#IDs <- sapply(strsplit(state.map$names, ":"), function(x) x[1])
-#library(maptools)
-#state.sp <- map2SpatialPolygons(state.map, IDs=IDs,
-#  proj4string=CRS("+proj=longlat +ellps=WGS84"))
 state_sf <- st_as_sf(state.map, fill=TRUE, group=TRUE,
     crs=st_crs("+proj=longlat +ellps=WGS84"))
 state.sp <- as(st_geometry(state_sf), "Spatial")
@@ -480,8 +462,7 @@ summary(state.spdf1)
 ### code chunk number 79: cm.Rnw:1591-1594
 ###################################################
 #library(maptools)
-#high <- Rgshhs("/home/rsb/tmp/gshhs/GSHHS220/gshhs/gshhs_h.b", xlim=c(277,278),
-# ylim=c(45.7,46.2))
+#high <- Rgshhs("/home/rsb/tmp/gshhs/GSHHS220/gshhs/gshhs_h.b", xlim=c(277,278), ylim=c(45.7,46.2))
 #save(high, file="../Data/high.RData")
 
 
@@ -496,10 +477,8 @@ manitoulin_sp <- high$SP
 ### code chunk number 81: cm.Rnw:1603-1606
 ###################################################
 length(slot(manitoulin_sp, "polygons"))
-sapply(slot(slot(manitoulin_sp, "polygons")[[1]], "Polygons"), function(x) 
-    slot(x, "hole"))
-sapply(slot(slot(manitoulin_sp, "polygons")[[1]], "Polygons"), function(x) 
-    slot(x, "ringDir"))
+sapply(slot(slot(manitoulin_sp, "polygons")[[1]], "Polygons"), function(x) slot(x, "hole"))
+sapply(slot(slot(manitoulin_sp, "polygons")[[1]], "Polygons"), function(x) slot(x, "ringDir"))
 
 
 ###################################################
@@ -511,7 +490,6 @@ sapply(slot(slot(manitoulin_sp, "polygons")[[1]], "Polygons"), function(x)
 ###################################################
 ### code chunk number 83: cm.Rnw:1646-1648
 ###################################################
-#manitoulin_sp <- createSPComment(manitoulin_sp)
 comment(slot(manitoulin_sp, "polygons")[[1]]) <- rep("0", 19)
 comment(manitoulin_sp) <- "TRUE"
 manitoulin_sf <- st_make_valid(st_geometry(st_as_sf(manitoulin_sp)))
@@ -523,7 +501,6 @@ sapply(slot(manitoulin_sp, "polygons"), comment)
 ###################################################
 ### code chunk number 84: cm.Rnw:1674-1687
 ###################################################
-#plot(manitoulin_sp, pbg="lightsteelblue2", col="khaki2", usePolypath=FALSE)
 plot(manitoulin_sp, bg="lightsteelblue2", col="khaki2", usePolypath=TRUE, xaxs="i", yaxs="i")
 text(t(sapply(slot(slot(manitoulin_sp, "polygons")[[1]], "Polygons"), function(x) slot(x, "labpt")))[-c(1,2),], label=high$polydata$level[-c(1,2)], col="black", font=2)
 cmt <- unlist(strsplit(sapply(slot(manitoulin_sp, "polygons"), comment), " "))
@@ -558,7 +535,6 @@ getClass("SpatialGrid")
 ###################################################
 ### code chunk number 89: cm.Rnw:1772-1775
 ###################################################
-#p4s <- CRS(proj4string(manitoulin_sp))
 p4s <- slot(manitoulin_sp, "proj4string")
 manitoulin_SG <- SpatialGrid(manitoulin_grd, proj4string=p4s)
 summary(manitoulin_SG)
@@ -644,14 +620,12 @@ summary(mg_SPix1)
 ###################################################
 ### code chunk number 100: cm.Rnw:1983-1984
 ###################################################
-#library(raster)
 library(stars)
 
 
 ###################################################
 ### code chunk number 101: cm.Rnw:1986-1987
 ###################################################
-#r <- raster("70042108.tif")
 r <- read_stars("70042108.tif", proxy = TRUE)
 
 
@@ -659,14 +633,9 @@ r <- read_stars("70042108.tif", proxy = TRUE)
 ### code chunk number 103: cm.Rnw:1992-1998
 ###################################################
 class(r)
-#inMemory(r)
 object.size(r)
-#cellStats(r, max)
-#st_apply(r, 3, function(x) max(as.vector(x)))
 max(as.vector(st_as_stars(r)[[1]]), na.rm = TRUE)
-#cellStats(r, min)
 min(as.vector(st_as_stars(r)[[1]]), na.rm = TRUE)
-#inMemory(r)
 inherits(r, "stars_proxy") # out-of-memory?
 object.size(r)
 object.size(st_as_stars(r))
@@ -675,18 +644,6 @@ object.size(st_as_stars(r))
 ###################################################
 ### code chunk number 104: cm.Rnw:2012-2024
 ###################################################
-#out <- raster(r)
-#bs <- blockSize(out)
-#out <- writeStart(out, filename=tempfile(), overwrite=TRUE)
-#for (i in 1:bs$n) {
-#    v <- getValues(r, row=bs$row[i], nrows=bs$nrows[i])
-#    v[v <= 0] <- NA
-#    writeValues(out, v, bs$row[i])
-#}
-#out <- writeStop(out)
-#cellStats(out, min)
-#cellStats(out, max)
-#inMemory(out)
 out = r
 out[ r <= 0 ] = NA
 dout <- st_as_stars(out)
@@ -705,7 +662,6 @@ plot(auck_gshhs, add = TRUE)
 ###################################################
 ### code chunk number 107: cm.Rnw:2069-2073
 ###################################################
-#r1 <- as(out, "SpatialGridDataFrame")
 summary(r1)
 r2 <- as(dout, "SpatRaster")
 summary(r2)
