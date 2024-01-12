@@ -17,7 +17,12 @@
 library(sf)
 pths <- sf_proj_search_paths()
 library(RSQLite)
-db <- dbConnect(SQLite(), dbname=file.path(pths[length(pths)], "proj.db"))
+if (is.na(pths["PROJ"])) { pth <- pths[length(pths)]
+} else {
+  pth <- strsplit(pths["PROJ"], ":")
+  pth <- pth$PROJ[length(pth$PROJ)]
+}
+db <- dbConnect(SQLite(), dbname=file.path(pth, "proj.db"))
 GCRSi <- dbGetQuery(db, "SELECT auth_name, code, name FROM geodetic_crs WHERE typeof(code) = 'integer'")
 GCRSi$code <- as.character(GCRSi$code)
 GCRSt <- dbGetQuery(db, "SELECT auth_name, code, name FROM geodetic_crs WHERE typeof(code) = 'text'")
