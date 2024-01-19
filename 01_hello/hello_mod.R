@@ -50,6 +50,7 @@ opar = par(no.readonly = TRUE)
 par(mar=c(1,1,1,1)+0.1, xpd=NA)
 plot(wrld_proj, col="grey50")
 plot(wrld_grd_proj, add=TRUE, lty=3, col="grey50")
+points(volc_proj, cex = .8, pch = 3, col = "blue")
 text(coordinates(at_proj), pos=at_proj$pos, offset=at_proj$offset,
  labels=parse(text=as.character(at_proj$labels)), cex=0.6)
 par(opar)
