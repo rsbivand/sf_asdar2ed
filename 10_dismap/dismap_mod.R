@@ -8,7 +8,8 @@
 library(sp)
 library(sf)
 library(spdep)
-nc_file <- system.file("shapes/sids.shp", package="spData")[1]
+#nc_file <- system.file("shapes/sids.shp", package="spData")[1]
+nc_file <- system.file("shapes/sids.gpkg", package="spData")[1]
 nc <- as(st_read(nc_file), "Spatial")
 row.names(nc) <- as.character(nc$FIPSNO)
 #llCRS <- CRS("+proj=longlat +datum=NAD27")
