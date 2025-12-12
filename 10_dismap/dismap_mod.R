@@ -6,6 +6,9 @@
 ###################################################
 #library(maptools)
 library(sp)
+library(raster)
+library(spacetime)
+library(xts)
 library(sf)
 library(spdep)
 #nc_file <- system.file("shapes/sids.shp", package="spData")[1]
@@ -517,8 +520,6 @@ st
 ### code chunk number 93: dismap.Rnw:2846-2861
 ###################################################
 #Temporal trend
-library(spacetime)
-library(xts)
 #Load STFDF
 load("brainNM.RData")
 #nmf <- slot(brainst, "sp")
